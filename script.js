@@ -59,42 +59,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         managedVideos.forEach(vid => {
+            const isExternal = vid.link.includes('drive.google') || vid.link.includes('youtube') || vid.link.includes('youtu.be');
+            const iconClass = vid.link.includes('youtube') || vid.link.includes('youtu.be') ? 'fab fa-youtube' : 'fab fa-google-drive';
+            const iconColor = vid.link.includes('youtube') || vid.link.includes('youtu.be') ? '#ef4444' : '#10b981';
+
             if (vid.format === 'shorts') {
-                shortsGrid.innerHTML += `
-                    <div class="video-card aspect-916" onmouseenter="let v=this.querySelector('video'); v.muted=false; v.play();" onmouseleave="let v=this.querySelector('video'); v.pause(); v.muted=true;">
-                        <div class="video-loader">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <div class="loader-progress-bar"><div class="loader-progress-fill"></div></div>
-                        </div>
-                        <div class="play-icon-center"><i class="fas fa-play"></i></div>
-                        <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="auto"></video>
-                        <div class="video-overlay">
-                            <h4 class="video-title">${vid.title}</h4>
-                            <p class="video-desc">${vid.desc}</p>
-                        </div>
-                    </div>
-                `;
-            } else if (vid.format === 'longform') {
-                if (vid.link.includes('drive.google') || vid.link.includes('youtube')) {
-                    longformGrid.innerHTML += `
-                        <a href="${vid.link}" target="_blank" class="external-link-card glass-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;">
-                            <i class="fab fa-google-drive" style="font-size:2rem;color:#10b981;margin-bottom:1rem;"></i>
-                            <h4>${vid.title}</h4>
-                            <p>Click to watch on Google Drive / YouTube</p>
+                if (isExternal) {
+                    shortsGrid.innerHTML += `
+                        <a href="${vid.link}" target="_blank" class="external-link-card glass-card aspect-916" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;text-decoration:none;">
+                            <i class="${iconClass}" style="font-size:2.5rem;color:${iconColor};margin-bottom:1rem;"></i>
+                            <h4 style="color:white;font-size:1.1rem;margin-bottom:0.5rem;">${vid.title}</h4>
+                            <p style="color:var(--text-secondary);font-size:0.85rem;">Click to watch video link</p>
                         </a>
                     `;
                 } else {
-                    longformGrid.innerHTML += `
-                        <div class="video-card aspect-169" onmouseenter="let v=this.querySelector('video'); v.muted=false; v.play();" onmouseleave="let v=this.querySelector('video'); v.pause(); v.muted=true;">
+                    shortsGrid.innerHTML += `
+                        <div class="video-card aspect-916" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=false; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.muted=true; }">
                             <div class="video-loader">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <div class="loader-progress-bar"><div class="loader-progress-fill"></div></div>
                             </div>
                             <div class="play-icon-center"><i class="fas fa-play"></i></div>
-                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="auto"></video>
+                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="metadata"></video>
                             <div class="video-overlay">
                                 <h4 class="video-title">${vid.title}</h4>
-                                <p class="video-desc">${vid.desc}</p>
+                                <p class="video-desc">${vid.desc || ''}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (vid.format === 'longform') {
+                if (isExternal) {
+                    longformGrid.innerHTML += `
+                        <a href="${vid.link}" target="_blank" class="external-link-card glass-card aspect-169" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;text-decoration:none;">
+                            <i class="${iconClass}" style="font-size:3rem;color:${iconColor};margin-bottom:1rem;"></i>
+                            <h4 style="color:white;font-size:1.3rem;margin-bottom:0.5rem;">${vid.title}</h4>
+                            <p style="color:var(--text-secondary);font-size:0.9rem;">Click to watch on Google Drive / YouTube</p>
+                        </a>
+                    `;
+                } else {
+                    longformGrid.innerHTML += `
+                        <div class="video-card aspect-169" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=false; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.muted=true; }">
+                            <div class="video-loader">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <div class="loader-progress-bar"><div class="loader-progress-fill"></div></div>
+                            </div>
+                            <div class="play-icon-center"><i class="fas fa-play"></i></div>
+                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="metadata"></video>
+                            <div class="video-overlay">
+                                <h4 class="video-title">${vid.title}</h4>
+                                <p class="video-desc">${vid.desc || ''}</p>
                             </div>
                         </div>
                     `;
@@ -102,22 +116,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Initialize Native Video Loading Bars
+        // Initialize Native Video Loading Bars & Fix Initial Buffer State
         document.querySelectorAll('.video-card video').forEach(v => {
             const loader = v.parentElement.querySelector('.video-loader');
             const progressFill = v.parentElement.querySelector('.loader-progress-fill');
             if (loader && progressFill) {
+                const hideLoader = () => {
+                    loader.classList.remove('active');
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        if (!loader.classList.contains('active')) {
+                            loader.style.display = 'none';
+                        }
+                    }, 300);
+                };
+
+                const showLoader = () => {
+                    loader.style.display = 'flex';
+                    setTimeout(() => loader.classList.add('active'), 10);
+                };
+
+                // Hide loader overlay by default so poster/preview and play icon show cleanly
+                hideLoader();
+
                 v.addEventListener('progress', () => {
                     if (v.buffered.length > 0 && v.duration > 0) {
                         const pct = (v.buffered.end(v.buffered.length - 1) / v.duration) * 100;
                         progressFill.style.width = pct + '%';
-                        if (pct > 99) loader.style.opacity = '0';
+                        if (pct > 90) hideLoader();
                     }
                 });
-                const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); };
+
                 v.addEventListener('canplay', hideLoader);
+                v.addEventListener('loadeddata', hideLoader);
+                v.addEventListener('loadedmetadata', hideLoader);
                 v.addEventListener('playing', hideLoader);
-                v.addEventListener('waiting', () => { loader.style.display = 'flex'; setTimeout(() => loader.style.opacity = '1', 10); });
+                v.addEventListener('pause', hideLoader);
+                v.addEventListener('waiting', showLoader);
             }
         });
 
