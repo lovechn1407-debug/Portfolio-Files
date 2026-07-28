@@ -457,11 +457,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         canvas.height = videoElement.videoHeight;
         const ctx = canvas.getContext('2d');
 
+        let drawSuccess = false;
         try {
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            canvas.toDataURL('image/jpeg');
+            drawSuccess = true;
         } catch (e) {
+            drawSuccess = false;
+        }
+
+        // Fallback: If direct draw failed due to CORS, attempt blob fetch fallback
+        if (!drawSuccess && videoElement.src && !videoElement.src.startsWith('blob:')) {
+            try {
+                const resp = await fetch(videoElement.src);
+                if (resp.ok) {
+                    const blob = await resp.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    const tempVid = document.createElement('video');
+                    tempVid.muted = true;
+                    tempVid.src = blobUrl;
+                    await new Promise(r => { tempVid.onloadeddata = r; tempVid.currentTime = videoElement.currentTime; });
+                    await new Promise(r => { tempVid.onseeked = r; });
+                    ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(blobUrl);
+                    drawSuccess = true;
+                }
+            } catch (err) {
+                drawSuccess = false;
+            }
+        }
+
+        if (!drawSuccess) {
             if (statusElement) {
-                statusElement.textContent = '✗ CORS restriction on external video URL. Upload image file directly.';
+                statusElement.textContent = '✗ Remote server restricts canvas frame extraction. Please upload an image file using the Upload button above.';
                 statusElement.style.color = '#ef4444';
             }
             return null;
