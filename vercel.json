@@ -6,6 +6,10 @@
             "use": "@vercel/node"
         },
         {
+            "src": "api/cors-proxy.js",
+            "use": "@vercel/node"
+        },
+        {
             "src": "index.html",
             "use": "@vercel/static"
         },
@@ -30,6 +34,10 @@
         {
             "src": "/api/upload",
             "dest": "/api/upload.js"
+        },
+        {
+            "src": "/api/cors-proxy",
+            "dest": "/api/cors-proxy.js"
         },
         {
             "src": "/admin",
