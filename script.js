@@ -220,6 +220,13 @@ document.addEventListener('DOMContentLoaded', () => {
             { icon: 'fab fa-youtube', iconBg: 'rgba(239,68,68,0.1)', iconColor: '#ef4444', title: 'YouTube Channel', duration: '5 Months', desc: 'Managed post-production for an active channel, editing high-retention content to ensure consistent engagement and audience growth.' },
             { icon: 'fas fa-school', iconBg: 'rgba(59,130,246,0.1)', iconColor: '#3b82f6', title: 'The Sovereign School', duration: '1 Month', desc: 'Created educational, institutional, and promotional video content for school events aligning with organizational branding.' },
             { icon: 'fas fa-om', iconBg: 'rgba(139,92,246,0.1)', iconColor: '#8b5cf6', title: 'Iskcon Temple', duration: 'Project Basis', desc: 'Edited spiritual and event coverage content, focusing on emotional storytelling for social media outreach.' }
+        ],
+        skills: [
+            { name: 'Premiere Pro', logoUrl: '', logoText: 'Pr', logoBg: '#00005b', logoColor: '#9999ff', level: 'Fluent' },
+            { name: 'After Effects', logoUrl: '', logoText: 'Ae', logoBg: '#00005b', logoColor: '#d291ff', level: 'Intermediate' },
+            { name: 'CapCut', logoUrl: '', logoText: 'CC', logoBg: '#000000', logoColor: '#ffffff', level: 'Fluent' },
+            { name: 'Alight Motion', logoUrl: '', logoText: 'AM', logoBg: '#0d1117', logoColor: '#14b8a6', level: 'Fluent' },
+            { name: 'After Motion', logoUrl: '', logoText: 'AM', logoBg: '#1a0a10', logoColor: '#ec4899', level: 'Intermediate' }
         ]
     };
 
@@ -236,6 +243,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${w.desc}</p>
             </div>
         `).join('');
+    }
+
+    function renderSkillItems(skills) {
+        const container = document.getElementById('skills-grid');
+        if (!container || !skills || !skills.length) return;
+        container.innerHTML = skills.map(sk => {
+            const levelColor = sk.level === 'Fluent' ? '#4ade80' : (sk.level === 'Intermediate' ? '#facc15' : '#60a5fa');
+            let iconContent = '';
+            if (sk.logoUrl) {
+                iconContent = `<img src="${sk.logoUrl}" alt="${sk.name}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+            } else if (sk.logoText) {
+                iconContent = sk.logoText;
+            } else {
+                iconContent = '<i class="fas fa-layer-group"></i>';
+            }
+
+            return `
+                <div class="glass-card skill-item">
+                    <div class="skill-icon-box" style="background: ${sk.logoBg || '#121216'}; color: ${sk.logoColor || '#fff'}; border: 1px solid rgba(255,255,255,0.15); overflow:hidden;">
+                        ${iconContent}
+                    </div>
+                    <div class="details">
+                        <h3>${sk.name}</h3>
+                        <div class="level-indicator" style="color: ${levelColor};">
+                            <span class="level-dot" style="background-color: ${levelColor};"></span> ${sk.level}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     function applySiteData(sd) {
@@ -257,6 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (aboutEl) aboutEl.innerHTML = d.aboutText;
         // Experience cards
         if (d.works && d.works.length) renderExpCards(d.works);
+        // Software Proficiency skills
+        if (d.skills && d.skills.length) renderSkillItems(d.skills);
         // Footer links
         const emailLink = document.getElementById('footer-email-link');
         const emailText = document.getElementById('footer-email-text');

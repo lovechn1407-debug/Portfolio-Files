@@ -365,10 +365,72 @@ document.addEventListener('DOMContentLoaded', async () => {
             { icon: 'fab fa-youtube', iconBg: 'rgba(239,68,68,0.1)', iconColor: '#ef4444', title: 'YouTube Channel', duration: '5 Months', desc: 'Managed post-production for an active channel.' },
             { icon: 'fas fa-school', iconBg: 'rgba(59,130,246,0.1)', iconColor: '#3b82f6', title: 'The Sovereign School', duration: '1 Month', desc: 'Created educational and promotional video content for school events.' },
             { icon: 'fas fa-om', iconBg: 'rgba(139,92,246,0.1)', iconColor: '#8b5cf6', title: 'Iskcon Temple', duration: 'Project Basis', desc: 'Edited spiritual and event coverage content for social media outreach.' }
+        ],
+        skills: [
+            { name: 'Premiere Pro', logoUrl: '', logoText: 'Pr', logoBg: '#00005b', logoColor: '#9999ff', level: 'Fluent' },
+            { name: 'After Effects', logoUrl: '', logoText: 'Ae', logoBg: '#00005b', logoColor: '#d291ff', level: 'Intermediate' },
+            { name: 'CapCut', logoUrl: '', logoText: 'CC', logoBg: '#000000', logoColor: '#ffffff', level: 'Fluent' },
+            { name: 'Alight Motion', logoUrl: '', logoText: 'AM', logoBg: '#0d1117', logoColor: '#14b8a6', level: 'Fluent' },
+            { name: 'After Motion', logoUrl: '', logoText: 'AM', logoBg: '#1a0a10', logoColor: '#ec4899', level: 'Intermediate' }
         ]
     };
 
     let siteData = { ...DEFAULT_SITE_DATA };
+
+    // ---- imgbb Upload Utility ----
+    const IMGBB_API_KEY = '83e3f88941efd1059a89f016ff302d9e';
+
+    async function uploadToImgbb(file, statusEl) {
+        if (statusEl) { statusEl.textContent = 'Uploading...'; }
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+            const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (data.success) {
+                if (statusEl) { statusEl.textContent = '✓ Uploaded!'; statusEl.style.color = '#4ade80'; setTimeout(() => { statusEl.textContent = ''; statusEl.style.color = ''; }, 3000); }
+                return data.data.url;
+            } else {
+                throw new Error(data.error?.message || 'Upload failed');
+            }
+        } catch(e) {
+            if (statusEl) { statusEl.textContent = '✗ ' + e.message; statusEl.style.color = '#ef4444'; }
+            return null;
+        }
+    }
+
+    // Wire Profile Photo imgbb upload
+    const profileImgFileInput = document.getElementById('profile-img-file');
+    const profileImgUrlInput = document.getElementById('sd-profile-img');
+    const profileUploadStatus = document.getElementById('profile-upload-status');
+    if (profileImgFileInput) {
+        profileImgFileInput.addEventListener('change', async () => {
+            const file = profileImgFileInput.files[0];
+            if (!file) return;
+            const url = await uploadToImgbb(file, profileUploadStatus);
+            if (url) {
+                if (profileImgUrlInput) profileImgUrlInput.value = url;
+                const prev = document.getElementById('settings-profile-preview');
+                if (prev) prev.src = url;
+            }
+        });
+    }
+
+    // Wire Thumbnail imgbb upload
+    const thumbImgFileInput = document.getElementById('thumb-img-file');
+    const thumbUrlInput = document.getElementById('v-thumb');
+    const thumbUploadStatus = document.getElementById('thumb-upload-status');
+    if (thumbImgFileInput) {
+        thumbImgFileInput.addEventListener('change', async () => {
+            const file = thumbImgFileInput.files[0];
+            if (!file) return;
+            const url = await uploadToImgbb(file, thumbUploadStatus);
+            if (url && thumbUrlInput) thumbUrlInput.value = url;
+        });
+    }
 
     // Load siteData from cloud or localStorage
     try {
@@ -378,6 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (j.siteData) {
                 siteData = Object.assign({}, DEFAULT_SITE_DATA, j.siteData);
                 if (!siteData.works || !siteData.works.length) siteData.works = DEFAULT_SITE_DATA.works;
+                if (!siteData.skills || !siteData.skills.length) siteData.skills = DEFAULT_SITE_DATA.skills;
                 localStorage.setItem('port_sitedata', JSON.stringify(siteData));
             }
         }
@@ -401,6 +464,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Profile preview
         if (g('settings-profile-preview') && sd.profileImg) g('settings-profile-preview').src = sd.profileImg;
         renderWorkCards();
+        renderSkillCards();
     }
 
     // Update profile preview live
@@ -487,8 +551,120 @@ document.addEventListener('DOMContentLoaded', async () => {
         addWorkBtn.addEventListener('click', () => {
             siteData.works.push({ icon: 'fas fa-star', iconBg: 'rgba(139,92,246,0.1)', iconColor: '#8b5cf6', title: 'New Work', duration: '', desc: '' });
             renderWorkCards();
-            // Scroll to new card
             const cards = document.querySelectorAll('.work-editor-card');
+            if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+    /* --- Skills Cards Renderer --- */
+    function renderSkillCards() {
+        const container = document.getElementById('skills-editor');
+        if (!container) return;
+        if (!siteData.skills) siteData.skills = [];
+        container.innerHTML = '';
+        siteData.skills.forEach((sk, i) => {
+            const card = document.createElement('div');
+            card.className = 'skill-editor-card';
+            const logoPreviewHtml = sk.logoUrl
+                ? `<img class="skill-preview-icon" src="${escapeHtml(sk.logoUrl)}" alt="logo">`
+                : `<div class="skill-preview-icon" style="display:flex;align-items:center;justify-content:center;background:${escapeHtml(sk.logoBg||'#111')};color:${escapeHtml(sk.logoColor||'#fff')};font-weight:700;font-size:0.85rem;">${escapeHtml(sk.logoText||'?')}</div>`;
+            card.innerHTML = `
+                <div class="skill-editor-card-header">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        ${logoPreviewHtml}
+                        <span style="font-weight:700;color:white;font-size:0.95rem;">${escapeHtml(sk.name || 'Software ' + (i+1))}</span>
+                    </div>
+                    <button type="button" class="btn-danger" onclick="removeSkillCard(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="skill-fields-row">
+                    <div class="form-group" style="margin:0;">
+                        <label>App Name</label>
+                        <input type="text" class="form-control sk-name" data-idx="${i}" value="${escapeHtml(sk.name)}" placeholder="Premiere Pro">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Experience Level</label>
+                        <select class="form-control sk-level" data-idx="${i}">
+                            <option value="Fluent" ${sk.level==='Fluent'?'selected':''}>Fluent</option>
+                            <option value="Intermediate" ${sk.level==='Intermediate'?'selected':''}>Intermediate</option>
+                            <option value="Beginner" ${sk.level==='Beginner'?'selected':''}>Beginner</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:0.75rem;">
+                    <label>App Logo (Upload or URL)</label>
+                    <div class="imgbb-upload-row">
+                        <input type="url" class="form-control sk-logo-url" data-idx="${i}" value="${escapeHtml(sk.logoUrl||'')}" placeholder="https://i.ibb.co/... (optional)">
+                        <label class="btn-imgbb">
+                            <i class="fas fa-image"></i> Upload
+                            <input type="file" class="sk-logo-file" data-idx="${i}" accept="image/*">
+                        </label>
+                    </div>
+                    <span class="sk-logo-status" data-idx="${i}" style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;display:block;"></span>
+                </div>
+                <div class="skill-fields-row" style="margin-top:0;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Fallback Text (if no logo)</label>
+                        <input type="text" class="form-control sk-logo-text" data-idx="${i}" value="${escapeHtml(sk.logoText||'')}" placeholder="Pr" maxlength="3">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Logo Background Color</label>
+                        <div class="color-row">
+                            <input type="color" class="sk-logobg-picker" data-idx="${i}" value="${sk.logoBg||'#111111'}">
+                            <input type="text" class="form-control sk-logobg" data-idx="${i}" value="${escapeHtml(sk.logoBg||'#111111')}" placeholder="#00005b">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Wire file inputs for logo upload
+        container.querySelectorAll('.sk-logo-file').forEach(fileInput => {
+            fileInput.addEventListener('change', async () => {
+                const idx = +fileInput.dataset.idx;
+                const file = fileInput.files[0];
+                if (!file) return;
+                const statusEl = container.querySelector(`.sk-logo-status[data-idx="${idx}"]`);
+                const url = await uploadToImgbb(file, statusEl);
+                if (url) {
+                    const urlInput = container.querySelector(`.sk-logo-url[data-idx="${idx}"]`);
+                    if (urlInput) urlInput.value = url;
+                    // Re-render to update preview
+                    siteData.skills[idx].logoUrl = url;
+                    renderSkillCards();
+                }
+            });
+        });
+
+        // Sync color pickers
+        container.querySelectorAll('.sk-logobg-picker').forEach(picker => {
+            picker.addEventListener('input', () => {
+                const idx = +picker.dataset.idx;
+                const t = container.querySelector(`.sk-logobg[data-idx="${idx}"]`);
+                if (t) t.value = picker.value;
+            });
+        });
+        container.querySelectorAll('.sk-logobg').forEach(txt => {
+            txt.addEventListener('input', () => {
+                const idx = +txt.dataset.idx;
+                const p = container.querySelector(`.sk-logobg-picker[data-idx="${idx}"]`);
+                if (p && /^#[0-9a-f]{3,6}$/i.test(txt.value)) p.value = txt.value;
+            });
+        });
+    }
+
+    window.removeSkillCard = (idx) => {
+        siteData.skills.splice(idx, 1);
+        renderSkillCards();
+    };
+
+    const addSkillBtn = document.getElementById('add-skill-btn');
+    if (addSkillBtn) {
+        addSkillBtn.addEventListener('click', () => {
+            if (!siteData.skills) siteData.skills = [];
+            siteData.skills.push({ name: 'New App', logoUrl: '', logoText: 'A', logoBg: '#111111', logoColor: '#ffffff', level: 'Fluent' });
+            renderSkillCards();
+            const cards = document.querySelectorAll('.skill-editor-card');
             if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     }
@@ -514,6 +690,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
 
+        // Collect skill cards from DOM
+        const skillsContainer = document.getElementById('skills-editor');
+        const skills = (siteData.skills || []).map((sk, i) => {
+            const name = skillsContainer.querySelector(`.sk-name[data-idx="${i}"]`);
+            const level = skillsContainer.querySelector(`.sk-level[data-idx="${i}"]`);
+            const logoUrl = skillsContainer.querySelector(`.sk-logo-url[data-idx="${i}"]`);
+            const logoText = skillsContainer.querySelector(`.sk-logo-text[data-idx="${i}"]`);
+            const logoBg = skillsContainer.querySelector(`.sk-logobg[data-idx="${i}"]`);
+            return {
+                name: name ? name.value.trim() : sk.name,
+                level: level ? level.value : sk.level,
+                logoUrl: logoUrl ? logoUrl.value.trim() : sk.logoUrl,
+                logoText: logoText ? logoText.value.trim() : sk.logoText,
+                logoBg: logoBg ? logoBg.value.trim() : sk.logoBg,
+                logoColor: sk.logoColor || '#ffffff'
+            };
+        });
+
         return {
             profileImg: g('sd-profile-img'),
             location: g('sd-location'),
@@ -524,7 +718,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             email: g('sd-email'),
             instagram: g('sd-instagram'),
             instagramUrl: g('sd-instagram-url'),
-            works
+            works,
+            skills
         };
     }
 

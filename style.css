@@ -617,7 +617,7 @@ body {
 
 .video-card {
     position: relative;
-    border-radius: var(--rounded-xl);
+    border-radius: 10px;
     overflow: hidden;
     background: #000;
     border: 1px solid var(--border-light);
