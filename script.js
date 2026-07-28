@@ -160,22 +160,47 @@ document.addEventListener('DOMContentLoaded', () => {
         attachPopupEvents();
     }
 
-    // Fetch videos from JSONBin.io (shared cloud) or fall back to localStorage
+    // Global shared cloud endpoint so all devices see added videos live
+    const CLOUD_JSON_URL = 'https://jsonblob.com/api/jsonBlob/019fa880-a3ea-712e-9bf8-c5169520ad47';
+
+    // Fetch videos from Global Cloud Storage, static videos.json, or fall back to localStorage
     async function loadVideos() {
-        if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
-            try {
-                const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                });
+        // 1. Primary: Global Shared Cloud Endpoint (Works across all devices)
+        try {
+            const resp = await fetch(CLOUD_JSON_URL, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (resp.ok) {
                 const json = await resp.json();
-                renderVideos(json.record?.videos || []);
-                return;
-            } catch (e) {
-                console.warn('JSONBin fetch failed, falling back to localStorage:', e);
+                const vids = json.videos || [];
+                if (vids && vids.length > 0) {
+                    localStorage.setItem('port_videos', JSON.stringify(vids));
+                    renderVideos(vids);
+                    return;
+                }
             }
+        } catch (e) {
+            console.warn('Global Cloud fetch failed, trying local fallback:', e);
         }
-        // Fallback: localStorage (local device only)
-        renderVideos(JSON.parse(localStorage.getItem('port_videos')) || []);
+
+        // 2. Secondary: Static videos.json file in repository
+        try {
+            const resp = await fetch('./videos.json');
+            if (resp.ok) {
+                const json = await resp.json();
+                const vids = json.videos || [];
+                if (vids && vids.length > 0) {
+                    renderVideos(vids);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Static videos.json fetch failed:', e);
+        }
+
+        // 3. Fallback: Local Device Storage
+        const localVids = JSON.parse(localStorage.getItem('port_videos')) || [];
+        renderVideos(localVids);
     }
 
     loadVideos();

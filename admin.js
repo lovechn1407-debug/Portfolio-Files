@@ -65,44 +65,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     const countDisplay = document.getElementById('video-count');
     const clearBtn = document.getElementById('clear-all-btn');
 
-    // JSONBin credentials stored in localStorage (set once via Settings section)
-    const JSONBIN_BIN_ID = localStorage.getItem('jsonbin_bin_id') || '';
-    const JSONBIN_API_KEY = localStorage.getItem('jsonbin_api_key') || '';
+    // Global shared cloud endpoint so all devices see added videos live
+    const CLOUD_JSON_URL = 'https://jsonblob.com/api/jsonBlob/019fa880-a3ea-712e-9bf8-c5169520ad47';
 
-    // Load from cloud if credentials exist, else fall back to localStorage
+    // Load from cloud storage (cross-device), else fall back to localStorage
     let videos = [];
-    if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
-        try {
-            const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_API_KEY }
-            });
+    try {
+        const resp = await fetch(CLOUD_JSON_URL, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
             const json = await resp.json();
-            videos = json.record?.videos || [];
+            videos = json.videos || [];
             localStorage.setItem('port_videos', JSON.stringify(videos));
-        } catch(e) {
-            console.warn('Could not load from JSONBin, using localStorage', e);
+        } else {
             videos = JSON.parse(localStorage.getItem('port_videos')) || [];
         }
-    } else {
+    } catch(e) {
+        console.warn('Could not load from cloud, using localStorage', e);
         videos = JSON.parse(localStorage.getItem('port_videos')) || [];
     }
 
-    // Sync videos to JSONBin cloud + localStorage on every change
+    // Sync videos to global cloud storage + localStorage on every change
     async function syncVideos() {
         localStorage.setItem('port_videos', JSON.stringify(videos));
-        if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
-                    },
-                    body: JSON.stringify({ videos })
-                });
-            } catch(e) {
-                console.warn('JSONBin sync failed:', e);
-            }
+        try {
+            await fetch(CLOUD_JSON_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ videos: videos })
+            });
+            console.log('Successfully synced videos to global cloud.');
+        } catch(e) {
+            console.warn('Global cloud sync failed:', e);
         }
     }
 
