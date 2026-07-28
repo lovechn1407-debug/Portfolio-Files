@@ -134,9 +134,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <p>${vid.desc || 'No description'} | <span style="text-transform: capitalize; color: var(--accent-purple);">${vid.format}</span></p>
                     </div>
                 </div>
-                <button class="btn-danger" onclick="deleteVideo(${index})" title="Remove Video">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div style="display:flex; align-items:center;">
+                    <button class="btn-edit" onclick="openEditVideoModal(${index})" title="Edit Video Details">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-danger" onclick="deleteVideo(${index})" title="Remove Video">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             `;
 
             // Drag and Drop Logic
@@ -429,6 +434,186 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!file) return;
             const url = await uploadToImgbb(file, thumbUploadStatus);
             if (url && thumbUrlInput) thumbUrlInput.value = url;
+        });
+    }
+
+    /* ---- Video Frame Grabber Utility ---- */
+    async function captureVideoFrameToImgbb(videoElement, statusElement) {
+        if (!videoElement || !videoElement.videoWidth || !videoElement.videoHeight) {
+            if (statusElement) {
+                statusElement.textContent = '✗ Video frame is not ready. Play or scrub to a frame first.';
+                statusElement.style.color = '#ef4444';
+            }
+            return null;
+        }
+
+        if (statusElement) {
+            statusElement.textContent = '📸 Capturing frame & uploading to ImgBB...';
+            statusElement.style.color = 'var(--accent-purple)';
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+
+        try {
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+            if (statusElement) {
+                statusElement.textContent = '✗ CORS restriction on external video URL. Upload image file directly.';
+                statusElement.style.color = '#ef4444';
+            }
+            return null;
+        }
+
+        return new Promise((resolve) => {
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    if (statusElement) {
+                        statusElement.textContent = '✗ Failed to extract frame image.';
+                        statusElement.style.color = '#ef4444';
+                    }
+                    resolve(null);
+                    return;
+                }
+
+                const frameFile = new File([blob], `frame_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                const imageUrl = await uploadToImgbb(frameFile, statusElement);
+                if (imageUrl && statusElement) {
+                    statusElement.textContent = '✓ Frame captured & set as cover!';
+                    statusElement.style.color = '#4ade80';
+                }
+                resolve(imageUrl);
+            }, 'image/jpeg', 0.95);
+        });
+    }
+
+    /* ---- Add Video Form Frame Grabber Wiring ---- */
+    const addFrameGrabberBox = document.getElementById('add-frame-grabber-box');
+    const addFrameVideo = document.getElementById('add-frame-video');
+    const addCaptureFrameBtn = document.getElementById('add-capture-frame-btn');
+    const addCaptureStatus = document.getElementById('add-capture-status');
+
+    if (fileInput && addFrameVideo && addFrameGrabberBox) {
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) {
+                addFrameVideo.src = URL.createObjectURL(file);
+                addFrameGrabberBox.style.display = 'block';
+            }
+        });
+    }
+
+    if (directLinkInput && addFrameVideo && addFrameGrabberBox) {
+        const updateDirectVideoPreview = () => {
+            const val = directLinkInput.value.trim();
+            if (val && (val.includes('.mp4') || val.includes('api.telegram.org') || val.startsWith('http'))) {
+                addFrameVideo.src = val;
+                addFrameGrabberBox.style.display = 'block';
+            }
+        };
+        directLinkInput.addEventListener('change', updateDirectVideoPreview);
+        directLinkInput.addEventListener('blur', updateDirectVideoPreview);
+    }
+
+    if (addCaptureFrameBtn && addFrameVideo) {
+        addCaptureFrameBtn.addEventListener('click', async () => {
+            const imgUrl = await captureVideoFrameToImgbb(addFrameVideo, addCaptureStatus);
+            if (imgUrl) {
+                const thumbInput = document.getElementById('v-thumb');
+                if (thumbInput) thumbInput.value = imgUrl;
+            }
+        });
+    }
+
+    /* ---- Edit Video Modal Logic ---- */
+    const editVideoModal = document.getElementById('edit-video-modal');
+    const closeEditVideoModalBtn = document.getElementById('close-edit-video-modal');
+    const editVideoForm = document.getElementById('edit-video-form');
+    const editVIndex = document.getElementById('edit-v-index');
+    const editVTitle = document.getElementById('edit-v-title');
+    const editVDesc = document.getElementById('edit-v-desc');
+    const editVFormat = document.getElementById('edit-v-format');
+    const editVLink = document.getElementById('edit-v-link');
+    const editVThumb = document.getElementById('edit-v-thumb');
+    const editThumbFile = document.getElementById('edit-thumb-file');
+    const editThumbStatus = document.getElementById('edit-thumb-status');
+    const editFrameVideo = document.getElementById('edit-frame-video');
+    const editCaptureFrameBtn = document.getElementById('edit-capture-frame-btn');
+    const editCaptureStatus = document.getElementById('edit-capture-status');
+    const editSubmitBtn = document.getElementById('edit-submit-btn');
+
+    window.openEditVideoModal = (index) => {
+        const vid = videos[index];
+        if (!vid) return;
+        editVIndex.value = index;
+        editVTitle.value = vid.title || '';
+        editVDesc.value = vid.desc || '';
+        editVFormat.value = vid.format || 'shorts';
+        editVLink.value = vid.link || '';
+        editVThumb.value = vid.thumb || '';
+
+        if (editFrameVideo && vid.link) {
+            editFrameVideo.src = vid.link;
+        }
+
+        if (editVideoModal) editVideoModal.classList.add('active');
+    };
+
+    if (closeEditVideoModalBtn && editVideoModal) {
+        closeEditVideoModalBtn.addEventListener('click', () => {
+            editVideoModal.classList.remove('active');
+            if (editFrameVideo) editFrameVideo.pause();
+        });
+    }
+
+    if (editVLink && editFrameVideo) {
+        editVLink.addEventListener('change', () => {
+            if (editVLink.value) editFrameVideo.src = editVLink.value;
+        });
+    }
+
+    if (editThumbFile) {
+        editThumbFile.addEventListener('change', async () => {
+            const file = editThumbFile.files[0];
+            if (!file) return;
+            const url = await uploadToImgbb(file, editThumbStatus);
+            if (url && editVThumb) editVThumb.value = url;
+        });
+    }
+
+    if (editCaptureFrameBtn && editFrameVideo) {
+        editCaptureFrameBtn.addEventListener('click', async () => {
+            const imgUrl = await captureVideoFrameToImgbb(editFrameVideo, editCaptureStatus);
+            if (imgUrl && editVThumb) editVThumb.value = imgUrl;
+        });
+    }
+
+    if (editVideoForm) {
+        editVideoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idx = parseInt(editVIndex.value, 10);
+            if (isNaN(idx) || !videos[idx]) return;
+
+            editSubmitBtn.disabled = true;
+            editSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            videos[idx] = {
+                title: editVTitle.value.trim(),
+                desc: editVDesc.value.trim(),
+                format: editVFormat.value,
+                link: editVLink.value.trim(),
+                thumb: editVThumb.value.trim()
+            };
+
+            await syncVideos();
+            renderAdminList();
+            editVideoModal.classList.remove('active');
+            if (editFrameVideo) editFrameVideo.pause();
+            editSubmitBtn.disabled = false;
+            editSubmitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video Changes';
+            alert('✓ Video details updated successfully!');
         });
     }
 

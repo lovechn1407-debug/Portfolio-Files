@@ -156,6 +156,22 @@
         }
         .btn-danger:hover { background: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
 
+        .btn-edit {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--accent-purple);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 8px;
+        }
+        .btn-edit:hover { background: var(--accent-purple); color: white; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+
         .admin-video-card.dragging { opacity: 0.5; border: 2px dashed var(--accent-purple); }
         .admin-video-card.drag-over { border-top: 2px solid var(--accent-pink); }
         .drag-handle { cursor: grab; color: var(--text-secondary); margin-right: 15px; font-size: 1.2rem; }
@@ -485,6 +501,18 @@
                         <span id="thumb-upload-status" style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;display:block;"></span>
                     </div>
 
+                    <!-- Video Frame Grabber Preview for Add Form -->
+                    <div class="frame-grabber-box" id="add-frame-grabber-box" style="display:none; background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); border-radius: 12px; padding: 12px; margin-top: 1rem;">
+                        <label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom: 8px;">
+                            <i class="fas fa-camera" style="color:var(--accent-purple); margin-right:5px;"></i> Capture Cover Frame From Video
+                        </label>
+                        <video id="add-frame-video" controls crossorigin="anonymous" style="width: 100%; max-height: 200px; border-radius: 8px; background: #000; display: block;"></video>
+                        <button type="button" id="add-capture-frame-btn" class="btn-secondary" style="width:100%; margin-top: 10px; font-size:0.88rem; justify-content:center; gap:8px;">
+                            <i class="fas fa-camera-retro"></i> Capture Current Frame &amp; Upload to ImgBB as Cover
+                        </button>
+                        <span id="add-capture-status" style="font-size:0.78rem; color:var(--text-secondary); margin-top:6px; display:block; text-align:center;"></span>
+                    </div>
+
                     <!-- Progress Bar -->
                     <div class="form-group" id="progress-container" style="display: none; margin-top: 1rem;">
                         <label style="display:flex; justify-content:space-between; color: var(--accent-purple);">
@@ -615,6 +643,71 @@
             <button class="btn-primary" id="save-settings-btn" style="padding: 0.75rem 2.5rem;">
                 <i class="fas fa-cloud-upload-alt"></i> Save &amp; Sync to Live Site
             </button>
+        </div>
+    </div>
+
+    <!-- Edit Video Details Modal Overlay -->
+    <div class="admin-login-overlay" id="edit-video-modal">
+        <div class="admin-login-card" style="max-width: 580px; width: 92%; max-height: 90vh; overflow-y: auto;">
+            <button class="login-close-btn" id="close-edit-video-modal" type="button"><i class="fas fa-times"></i></button>
+            <div class="login-header">
+                <div class="login-icon-badge" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);"><i class="fas fa-edit"></i></div>
+                <h3>Edit Video Details</h3>
+                <p>Update video metadata or capture a new cover image frame</p>
+            </div>
+            <form id="edit-video-form">
+                <input type="hidden" id="edit-v-index">
+                <div class="form-group">
+                    <label>Video Title</label>
+                    <input type="text" id="edit-v-title" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Short Description (Optional)</label>
+                    <input type="text" id="edit-v-desc" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Format</label>
+                    <select id="edit-v-format" class="form-control" required>
+                        <option value="shorts">9:16 (Reels/Shorts)</option>
+                        <option value="longform">16:9 (YouTube/Landscape)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Video Stream / Link URL</label>
+                    <input type="url" id="edit-v-link" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Cover Image Thumbnail URL</label>
+                    <div class="imgbb-upload-row">
+                        <input type="url" id="edit-v-thumb" class="form-control" placeholder="https://...">
+                        <label class="btn-imgbb">
+                            <i class="fas fa-image"></i> Upload
+                            <input type="file" id="edit-thumb-file" accept="image/*">
+                        </label>
+                    </div>
+                    <span id="edit-thumb-status" style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;display:block;"></span>
+                </div>
+
+                <!-- Frame Grabber in Edit Modal -->
+                <div class="frame-grabber-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); border-radius: 12px; padding: 12px; margin-top: 1rem;">
+                    <label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom: 8px;">
+                        <i class="fas fa-camera" style="color:var(--accent-purple); margin-right:5px;"></i> Capture Cover Frame From Video
+                    </label>
+                    <video id="edit-frame-video" controls crossorigin="anonymous" style="width: 100%; max-height: 200px; border-radius: 8px; background: #000; display: block;"></video>
+                    <button type="button" id="edit-capture-frame-btn" class="btn-secondary" style="width:100%; margin-top: 10px; font-size:0.88rem; justify-content:center; gap:8px;">
+                        <i class="fas fa-camera-retro"></i> Capture Current Frame &amp; Upload to ImgBB as Cover
+                    </button>
+                    <span id="edit-capture-status" style="font-size:0.78rem; color:var(--text-secondary); margin-top:6px; display:block; text-align:center;"></span>
+                </div>
+
+                <button type="submit" id="edit-submit-btn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1.5rem;">
+                    <i class="fas fa-save"></i> Save Video Changes
+                </button>
+            </form>
         </div>
     </div>
 
