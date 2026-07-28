@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Love Chauhan | Professional Video Editor</title>
-    <meta name="description" content="Portfolio of Love Chauhan - Visual Storyteller & Video Editor.">
+    <meta name="description" content="Portfolio of Love Chauhan - Visual Storyteller &amp; Video Editor.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,17 +50,17 @@
         <div class="hero-content section-padding">
             <div class="profile-wrapper">
                 <div class="profile-glow"></div>
-                <img src="https://i.ibb.co/Tx8KS1Vf/IMG-20260210-164004.jpg" alt="Love Chauhan" class="profile-img">
+                <img id="profile-img" src="https://i.ibb.co/Tx8KS1Vf/IMG-20260210-164004.jpg" alt="Love Chauhan" class="profile-img">
             </div>
 
             <h1>Hi, I'm <span class="gradient-text">Love Chauhan</span></h1>
-            <p class="hero-subtitle">Visual Storyteller & Professional Video Editor</p>
+            <p class="hero-subtitle">Visual Storyteller &amp; Professional Video Editor</p>
 
             <div class="badges-row">
-                <span class="hero-badge"><i class="fas fa-map-marker-alt"></i> Delhi, India</span>
-                <span class="hero-badge"><i class="fas fa-bolt"></i> 2 Years Experience</span>
-                <span class="hero-badge"><i class="fas fa-graduation-cap"></i> B.Tech Student</span>
-                <span class="hero-badge"><i class="fas fa-calendar"></i> Age: 18</span>
+                <span class="hero-badge" id="badge-location"><i class="fas fa-map-marker-alt"></i> <span id="badge-location-text">Delhi, India</span></span>
+                <span class="hero-badge" id="badge-exp"><i class="fas fa-bolt"></i> <span id="badge-exp-text">2 Years Experience</span></span>
+                <span class="hero-badge" id="badge-edu"><i class="fas fa-graduation-cap"></i> <span id="badge-edu-text">B.Tech Student</span></span>
+                <span class="hero-badge" id="badge-age"><i class="fas fa-calendar"></i> Age: <span id="badge-age-text">18</span></span>
             </div>
 
             <div class="btn-group">
@@ -74,12 +74,12 @@
     <section id="about" class="section-padding">
         <div class="section-header">
             <span class="section-tag"><i class="fas fa-user"></i> My Journey</span>
-            <h2 class="section-title">About & <span class="gradient-text">Experience</span></h2>
+            <h2 class="section-title">About &amp; <span class="gradient-text">Experience</span></h2>
         </div>
 
         <div class="about-grid">
             <div class="glass-card">
-                <p class="about-intro">
+                <p class="about-intro" id="about-intro-text">
                     Hello! I'm <strong>Love Chauhan</strong>, a passionate 18-year-old video editor from
                     <strong>Delhi</strong>. Currently pursuing my <strong>B.Tech</strong>, I balance my technical
                     studies with my creative drive for video production.
@@ -90,7 +90,7 @@
                 </p>
             </div>
 
-            <div class="experience-grid">
+            <div class="experience-grid" id="experience-cards-container">
                 <!-- YouTube Experience -->
                 <div class="glass-card exp-card">
                     <div class="exp-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
@@ -280,33 +280,45 @@
 
     <!-- Footer & Contact -->
     <footer id="contact" class="footer-cta section-padding">
-        <h2 class="section-title">Ready to create something amazing?</h2>
-        <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 1.1rem;">I'm currently available for
-            freelance projects and collaborations.</p>
+        <div class="footer-inner">
+            <div class="footer-tagline">
+                <span class="section-tag"><i class="fas fa-paper-plane"></i> Get In Touch</span>
+                <h2 class="section-title" style="margin-top: 1rem;">Ready to create something <span class="gradient-text">amazing?</span></h2>
+                <p class="footer-sub">I'm currently available for freelance projects and collaborations. Let's build something great together.</p>
+            </div>
 
-        <div class="footer-buttons">
-            <a href="mailto:lovechn1407@gmail.com" class="contact-btn">
-                <i class="fas fa-envelope"></i>
-                <div class="contact-info">
-                    <span>Email Me</span>
-                    <small>lovechn1407@gmail.com</small>
-                </div>
-            </a>
+            <div class="footer-contact-row">
+                <!-- Email Button -->
+                <a id="footer-email-link" href="mailto:lovechn1407@gmail.com" class="footer-contact-card footer-email-card">
+                    <div class="footer-card-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="footer-card-content">
+                        <span class="footer-card-label">Send an Email</span>
+                        <span class="footer-card-value" id="footer-email-text">lovechn1407@gmail.com</span>
+                    </div>
+                    <i class="fas fa-arrow-right footer-card-arrow"></i>
+                </a>
 
-            <a href="https://www.instagram.com/love_chn.14/" target="_blank" class="contact-btn">
-                <i class="fab fa-instagram"></i>
-                <div class="contact-info">
-                    <span>Instagram</span>
-                    <small>@love_chn.14</small>
-                </div>
-            </a>
+                <!-- Instagram Button -->
+                <a id="footer-insta-link" href="https://www.instagram.com/love_chn.14/" target="_blank" class="footer-contact-card footer-insta-card">
+                    <div class="footer-card-icon">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <div class="footer-card-content">
+                        <span class="footer-card-label">Follow on Instagram</span>
+                        <span class="footer-card-value" id="footer-insta-text">@love_chn.14</span>
+                    </div>
+                    <i class="fas fa-arrow-right footer-card-arrow"></i>
+                </a>
+            </div>
+
+            <p class="copyright">
+                &copy; 2026 Love Chauhan. All Rights Reserved.
+                <span style="font-size: 0.7rem; cursor:pointer; color: var(--border-light); margin-left: 10px;"
+                    onclick="checkAdmin()">&#9650;</span>
+            </p>
         </div>
-
-        <p class="copyright">
-            &copy; 2026 Love Chauhan. All Rights Reserved.
-            <span style="font-size: 0.7rem; cursor:pointer; color: var(--border-light); margin-left: 10px;"
-                onclick="checkAdmin()">&#9650;</span>
-        </p>
     </footer>
 
     <!-- Video Popup Modal -->

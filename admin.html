@@ -5,39 +5,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Love Chauhan | Portfolio Admin</title>
-    <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet">
-    <!-- Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ---- Admin Layout ---- */
         .admin-header {
-            padding: 2rem;
+            padding: 1.25rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-light);
-            background: rgba(9, 9, 11, 0.9);
-            backdrop-filter: blur(12px);
+            background: rgba(9, 9, 11, 0.97);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .admin-container {
-            max-width: 1000px;
-            margin: 4rem auto;
-            padding: 0 2rem;
+        /* ---- Tab bar ---- */
+        .admin-tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1.5rem 2rem 0;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .admin-tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.6rem 1.4rem;
+            border-radius: var(--rounded-full);
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .admin-tab-btn.active {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+        }
+
+        .admin-tab-btn:not(.active):hover {
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+
+        /* ---- Tab Panels ---- */
+        .admin-panel {
+            display: none;
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 2rem 4rem;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        /* Videos panel grid */
+        .videos-panel-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 2rem;
         }
 
         @media(min-width: 800px) {
-            .admin-container {
-                grid-template-columns: 350px 1fr;
+            .videos-panel-grid {
+                grid-template-columns: 360px 1fr;
             }
         }
 
+        /* ---- Form Styles ---- */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -46,19 +92,22 @@
             display: block;
             margin-bottom: 0.5rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.87rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-control {
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--border-light);
             color: white;
             padding: 12px 16px;
             border-radius: var(--rounded-xl);
             font-family: var(--font-body);
-            transition: var(--transition-fast);
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .form-control:focus {
@@ -67,6 +116,12 @@
             box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
         }
 
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* ---- Admin video list ---- */
         .video-list {
             display: flex;
             flex-direction: column;
@@ -83,15 +138,8 @@
             border: 1px solid var(--border-light);
         }
 
-        .admin-video-info h4 {
-            margin-bottom: 0.2rem;
-            color: white;
-        }
-
-        .admin-video-info p {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
+        .admin-video-info h4 { margin-bottom: 0.2rem; color: white; }
+        .admin-video-info p { font-size: 0.8rem; color: var(--text-secondary); }
 
         .btn-danger {
             background: rgba(239, 68, 68, 0.1);
@@ -106,28 +154,173 @@
             cursor: pointer;
             transition: 0.2s;
         }
+        .btn-danger:hover { background: #ef4444; color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
 
-        .btn-danger:hover {
-            background: #ef4444;
+        .admin-video-card.dragging { opacity: 0.5; border: 2px dashed var(--accent-purple); }
+        .admin-video-card.drag-over { border-top: 2px solid var(--accent-pink); }
+        .drag-handle { cursor: grab; color: var(--text-secondary); margin-right: 15px; font-size: 1.2rem; }
+
+        /* ---- Site Settings Panel ---- */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media(min-width: 768px) {
+            .settings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .settings-card {
+            background: rgba(18, 18, 22, 0.92);
+            border: 1px solid var(--border-light);
+            border-radius: var(--rounded-xl);
+            padding: 1.75rem;
+            transition: border-color 0.3s;
+        }
+
+        .settings-card:hover {
+            border-color: rgba(139, 92, 246, 0.35);
+        }
+
+        .settings-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .settings-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
             color: white;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
         }
 
-        /* Drag and Drop Styles */
-        .admin-video-card.dragging {
-            opacity: 0.5;
-            border: 2px dashed var(--accent-purple);
+        .settings-card-title i {
+            color: var(--accent-purple);
+            font-size: 1.1rem;
         }
 
-        .admin-video-card.drag-over {
-            border-top: 2px solid var(--accent-pink);
+        /* Profile photo preview */
+        .profile-preview-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 1rem;
         }
 
-        .drag-handle {
-            cursor: grab;
+        #settings-profile-preview {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(139, 92, 246, 0.4);
+        }
+
+        /* Work cards editor */
+        .work-cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .work-editor-card {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border-light);
+            border-radius: var(--rounded-xl);
+            padding: 1.25rem;
+            position: relative;
+        }
+
+        .work-editor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .work-editor-card-title {
+            font-weight: 700;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .work-fields-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .btn-add-work {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: var(--rounded-xl);
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px dashed rgba(139, 92, 246, 0.4);
+            color: var(--accent-purple);
+            font-family: var(--font-body);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-add-work:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--accent-purple);
+        }
+
+        /* Save button strip */
+        .settings-save-strip {
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+            background: rgba(9, 9, 11, 0.95);
+            border-top: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .save-status {
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            margin-right: 15px;
-            font-size: 1.2rem;
+        }
+
+        .save-status.ok { color: #4ade80; }
+        .save-status.err { color: #ef4444; }
+
+        /* color swatch input */
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-row input[type="color"] {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            padding: 3px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .color-row .form-control {
+            flex: 1;
         }
     </style>
 </head>
@@ -151,98 +344,190 @@
         </div>
     </header>
 
-    <div class="admin-container">
-        <!-- Add Video Form -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-video" style="color:var(--accent-purple);"></i> Add Portfolio Video</h3>
-            
-            <!-- Video Source Selection Tabs -->
-            <div class="source-toggle-group">
-                <button type="button" class="source-tab-btn active" id="tab-source-file">
-                    <i class="fas fa-file-upload"></i> Upload File
-                </button>
-                <button type="button" class="source-tab-btn" id="tab-source-link">
-                    <i class="fas fa-link"></i> Direct Video / Link
+    <!-- Tab Bar -->
+    <div class="admin-tab-bar">
+        <button class="admin-tab-btn active" id="tab-videos-btn">
+            <i class="fas fa-video"></i> Portfolio Videos
+        </button>
+        <button class="admin-tab-btn" id="tab-settings-btn">
+            <i class="fas fa-sliders-h"></i> Site Settings
+        </button>
+    </div>
+
+    <!-- ===== PANEL 1: Videos ===== -->
+    <div class="admin-panel active" id="panel-videos">
+        <div class="videos-panel-grid">
+            <!-- Add Video Form -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-video" style="color:var(--accent-purple);"></i> Add Portfolio Video</h3>
+
+                <!-- Video Source Selection Tabs -->
+                <div class="source-toggle-group">
+                    <button type="button" class="source-tab-btn active" id="tab-source-file">
+                        <i class="fas fa-file-upload"></i> Upload File
+                    </button>
+                    <button type="button" class="source-tab-btn" id="tab-source-link">
+                        <i class="fas fa-link"></i> Direct Video / Link
+                    </button>
+                </div>
+
+                <form id="add-video-form">
+                    <div class="form-group">
+                        <label>Video Title</label>
+                        <input type="text" id="v-title" class="form-control" placeholder="E.g. Transition Edit" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Short Description (Optional)</label>
+                        <input type="text" id="v-desc" class="form-control" placeholder="E.g. Used Alight Motion">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Format</label>
+                        <select id="v-format" class="form-control" required>
+                            <option value="shorts">9:16 (Reels/Shorts)</option>
+                            <option value="longform">16:9 (YouTube/Landscape)</option>
+                        </select>
+                    </div>
+
+                    <!-- Input Group 1: File Upload -->
+                    <div class="form-group" id="file-upload-group">
+                        <label>Upload Video File (.mp4)</label>
+                        <input type="file" id="v-file" class="form-control" accept="video/mp4,video/x-m4v,video/*" required>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                            File will be uploaded via Telegram server to generate a direct stream link.
+                        </p>
+                    </div>
+
+                    <!-- Input Group 2: Direct Video / External Link -->
+                    <div class="form-group" id="direct-link-group" style="display: none;">
+                        <label>Direct Video / External Link URL</label>
+                        <input type="url" id="v-direct-link" class="form-control"
+                            placeholder="https://example.com/video.mp4 or Drive / YouTube link">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                            Enter a direct video URL (.mp4), CDN link, or Google Drive / YouTube link.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cover Image Thumbnail Link (Optional)</label>
+                        <input type="url" id="v-thumb" class="form-control" placeholder="https://...">
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="form-group" id="progress-container" style="display: none; margin-top: 1rem;">
+                        <label style="display:flex; justify-content:space-between; color: var(--accent-purple);">
+                            <span>Uploading...</span>
+                            <span id="progress-text">0%</span>
+                        </label>
+                        <div style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
+                            <div id="progress-bar" style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.2s;"></div>
+                        </div>
+                        <p id="progress-status" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; text-align: center;">Sending to proxy server...</p>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        Add to Portfolio <i class="fas fa-plus-circle"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Manage existing videos -->
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-list"></i> Managed Videos (<span id="video-count">0</span>)</h3>
+                <div class="video-list" id="admin-video-list">
+                    <!-- Videos map here -->
+                </div>
+                <button id="clear-all-btn" class="btn-secondary" style="margin-top: 2rem; width: 100%; border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PANEL 2: Site Settings ===== -->
+    <div class="admin-panel" id="panel-settings">
+        <div class="settings-grid">
+
+            <!-- Profile Photo -->
+            <div class="settings-card">
+                <div class="settings-card-title"><i class="fas fa-user-circle"></i> Profile Photo</div>
+                <div class="profile-preview-wrap">
+                    <img id="settings-profile-preview" src="https://i.ibb.co/Tx8KS1Vf/IMG-20260210-164004.jpg" alt="Preview">
+                    <div style="flex:1;">
+                        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.5rem;">Paste a direct image URL (imgbb.com, imgur, etc.)</p>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Profile Image URL</label>
+                    <input type="url" id="sd-profile-img" class="form-control" placeholder="https://i.ibb.co/...">
+                </div>
+            </div>
+
+            <!-- Hero Info Badges -->
+            <div class="settings-card">
+                <div class="settings-card-title"><i class="fas fa-id-card"></i> Hero Info Badges</div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="sd-location" class="form-control" placeholder="Delhi, India">
+                </div>
+                <div class="form-group">
+                    <label>Experience (label text)</label>
+                    <input type="text" id="sd-experience" class="form-control" placeholder="2 Years Experience">
+                </div>
+                <div class="form-group">
+                    <label>Education / Status</label>
+                    <input type="text" id="sd-education" class="form-control" placeholder="B.Tech Student">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Age</label>
+                    <input type="text" id="sd-age" class="form-control" placeholder="18">
+                </div>
+            </div>
+
+            <!-- About Text -->
+            <div class="settings-card full-width">
+                <div class="settings-card-title"><i class="fas fa-align-left"></i> About / Bio Text</div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Bio HTML (supports &lt;strong&gt; and &lt;br&gt; tags)</label>
+                    <textarea id="sd-about-text" class="form-control" style="min-height:150px;" placeholder="Hello! I'm Love Chauhan..."></textarea>
+                </div>
+            </div>
+
+            <!-- Contact Links -->
+            <div class="settings-card">
+                <div class="settings-card-title"><i class="fas fa-envelope"></i> Contact Links</div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="sd-email" class="form-control" placeholder="you@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Instagram Username (without @)</label>
+                    <input type="text" id="sd-instagram" class="form-control" placeholder="love_chn.14">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Instagram Full URL</label>
+                    <input type="url" id="sd-instagram-url" class="form-control" placeholder="https://www.instagram.com/love_chn.14/">
+                </div>
+            </div>
+
+            <!-- Experience / Work Cards -->
+            <div class="settings-card full-width">
+                <div class="settings-card-title"><i class="fas fa-briefcase"></i> Experience &amp; Work Cards</div>
+                <div class="work-cards-list" id="work-cards-editor">
+                    <!-- Rendered by JS -->
+                </div>
+                <button class="btn-add-work" id="add-work-btn">
+                    <i class="fas fa-plus"></i> Add New Work Entry
                 </button>
             </div>
 
-            <form id="add-video-form">
-                <div class="form-group">
-                    <label>Video Title</label>
-                    <input type="text" id="v-title" class="form-control" placeholder="E.g. Transition Edit" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Short Description (Optional)</label>
-                    <input type="text" id="v-desc" class="form-control" placeholder="E.g. Used Alight Motion">
-                </div>
-
-                <div class="form-group">
-                    <label>Format</label>
-                    <select id="v-format" class="form-control" required>
-                        <option value="shorts">9:16 (Reels/Shorts)</option>
-                        <option value="longform">16:9 (YouTube/Landscape)</option>
-                    </select>
-                </div>
-
-                <!-- Input Group 1: File Upload -->
-                <div class="form-group" id="file-upload-group">
-                    <label>Upload Video File (.mp4)</label>
-                    <input type="file" id="v-file" class="form-control" accept="video/mp4,video/x-m4v,video/*" required>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                        File will be uploaded via Telegram server to generate a direct stream link.
-                    </p>
-                </div>
-
-                <!-- Input Group 2: Direct Video / External Link -->
-                <div class="form-group" id="direct-link-group" style="display: none;">
-                    <label>Direct Video / External Link URL</label>
-                    <input type="url" id="v-direct-link" class="form-control"
-                        placeholder="https://example.com/video.mp4 or Drive / YouTube link">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                        Enter a direct video URL (.mp4), CDN link, or Google Drive / YouTube link.
-                    </p>
-                </div>
-
-                <div class="form-group">
-                    <label>Cover Image Thumbnail Link (Optional)</label>
-                    <input type="url" id="v-thumb" class="form-control" placeholder="https://...">
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="form-group" id="progress-container" style="display: none; margin-top: 1rem;">
-                    <label style="display:flex; justify-content:space-between; color: var(--accent-purple);">
-                        <span>Uploading...</span>
-                        <span id="progress-text">0%</span>
-                    </label>
-                    <div
-                        style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
-                        <div id="progress-bar"
-                            style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.2s;">
-                        </div>
-                    </div>
-                    <p id="progress-status"
-                        style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; text-align: center;">
-                        Sending to proxy server...</p>
-                </div>
-
-                <button type="submit" id="submit-btn" class="btn-primary"
-                    style="width: 100%; justify-content: center; margin-top: 1rem;">
-                    Add to Portfolio <i class="fas fa-plus-circle"></i>
-                </button>
-            </form>
         </div>
 
-        <!-- Manage existing videos -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-list"></i> Managed Videos (<span
-                    id="video-count">0</span>)</h3>
-            <div class="video-list" id="admin-video-list">
-                <!-- Videos map here -->
-            </div>
-            <button id="clear-all-btn" class="btn-secondary"
-                style="margin-top: 2rem; width: 100%; border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">Clear All
-                Data</button>
+        <!-- Sticky save bar -->
+        <div class="settings-save-strip">
+            <span class="save-status" id="save-status-msg"></span>
+            <button class="btn-primary" id="save-settings-btn" style="padding: 0.75rem 2.5rem;">
+                <i class="fas fa-cloud-upload-alt"></i> Save &amp; Sync to Live Site
+            </button>
         </div>
     </div>
 

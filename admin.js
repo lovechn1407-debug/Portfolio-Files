@@ -84,17 +84,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         videos = JSON.parse(localStorage.getItem('port_videos')) || [];
     }
 
-    // Sync videos to global cloud storage + localStorage on every change
     async function syncVideos() {
         localStorage.setItem('port_videos', JSON.stringify(videos));
         try {
+            // Fetch current cloud blob to preserve siteData during video sync
+            let currentSiteData = {};
+            try {
+                const cur = await fetch(CLOUD_JSON_URL, { headers: { 'Accept': 'application/json' } });
+                if (cur.ok) { const j = await cur.json(); currentSiteData = j.siteData || {}; }
+            } catch(e) {}
+
             await fetch(CLOUD_JSON_URL, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ videos: videos })
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ videos: videos, siteData: currentSiteData })
             });
             console.log('Successfully synced videos to global cloud.');
         } catch(e) {
@@ -319,4 +322,255 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial render
     renderAdminList();
+
+
+    /* =====================================================
+       ADMIN TAB SWITCHING
+    ===================================================== */
+    const tabVideosBtn = document.getElementById('tab-videos-btn');
+    const tabSettingsBtn = document.getElementById('tab-settings-btn');
+    const panelVideos = document.getElementById('panel-videos');
+    const panelSettings = document.getElementById('panel-settings');
+
+    if (tabVideosBtn && tabSettingsBtn) {
+        tabVideosBtn.addEventListener('click', () => {
+            tabVideosBtn.classList.add('active');
+            tabSettingsBtn.classList.remove('active');
+            panelVideos.classList.add('active');
+            panelSettings.classList.remove('active');
+        });
+        tabSettingsBtn.addEventListener('click', () => {
+            tabSettingsBtn.classList.add('active');
+            tabVideosBtn.classList.remove('active');
+            panelSettings.classList.add('active');
+            panelVideos.classList.remove('active');
+        });
+    }
+
+
+    /* =====================================================
+       SITE SETTINGS — Load & Render
+    ===================================================== */
+    const DEFAULT_SITE_DATA = {
+        location: 'Delhi, India',
+        experience: '2 Years Experience',
+        education: 'B.Tech Student',
+        age: '18',
+        profileImg: 'https://i.ibb.co/Tx8KS1Vf/IMG-20260210-164004.jpg',
+        aboutText: `Hello! I'm <strong>Love Chauhan</strong>, a passionate 18-year-old video editor from <strong>Delhi</strong>. Currently pursuing my <strong>B.Tech</strong>, I balance my technical studies with my creative drive for video production.<br><br>With <strong>2 years of hands-on experience</strong>, I specialize in crafting engaging visual narratives.`,
+        email: 'lovechn1407@gmail.com',
+        instagram: 'love_chn.14',
+        instagramUrl: 'https://www.instagram.com/love_chn.14/',
+        works: [
+            { icon: 'fab fa-youtube', iconBg: 'rgba(239,68,68,0.1)', iconColor: '#ef4444', title: 'YouTube Channel', duration: '5 Months', desc: 'Managed post-production for an active channel.' },
+            { icon: 'fas fa-school', iconBg: 'rgba(59,130,246,0.1)', iconColor: '#3b82f6', title: 'The Sovereign School', duration: '1 Month', desc: 'Created educational and promotional video content for school events.' },
+            { icon: 'fas fa-om', iconBg: 'rgba(139,92,246,0.1)', iconColor: '#8b5cf6', title: 'Iskcon Temple', duration: 'Project Basis', desc: 'Edited spiritual and event coverage content for social media outreach.' }
+        ]
+    };
+
+    let siteData = { ...DEFAULT_SITE_DATA };
+
+    // Load siteData from cloud or localStorage
+    try {
+        const sdResp = await fetch(CLOUD_JSON_URL, { headers: { 'Accept': 'application/json' } });
+        if (sdResp.ok) {
+            const j = await sdResp.json();
+            if (j.siteData) {
+                siteData = Object.assign({}, DEFAULT_SITE_DATA, j.siteData);
+                if (!siteData.works || !siteData.works.length) siteData.works = DEFAULT_SITE_DATA.works;
+                localStorage.setItem('port_sitedata', JSON.stringify(siteData));
+            }
+        }
+    } catch(e) {
+        const local = JSON.parse(localStorage.getItem('port_sitedata') || 'null');
+        if (local) siteData = Object.assign({}, DEFAULT_SITE_DATA, local);
+    }
+
+    function populateSettingsForm() {
+        const g = (id) => document.getElementById(id);
+        const sd = siteData;
+        if (g('sd-profile-img')) { g('sd-profile-img').value = sd.profileImg || ''; }
+        if (g('sd-location')) g('sd-location').value = sd.location || '';
+        if (g('sd-experience')) g('sd-experience').value = sd.experience || '';
+        if (g('sd-education')) g('sd-education').value = sd.education || '';
+        if (g('sd-age')) g('sd-age').value = sd.age || '';
+        if (g('sd-about-text')) g('sd-about-text').value = sd.aboutText || '';
+        if (g('sd-email')) g('sd-email').value = sd.email || '';
+        if (g('sd-instagram')) g('sd-instagram').value = sd.instagram || '';
+        if (g('sd-instagram-url')) g('sd-instagram-url').value = sd.instagramUrl || '';
+        // Profile preview
+        if (g('settings-profile-preview') && sd.profileImg) g('settings-profile-preview').src = sd.profileImg;
+        renderWorkCards();
+    }
+
+    // Update profile preview live
+    const sdProfileImgInput = document.getElementById('sd-profile-img');
+    const profilePreview = document.getElementById('settings-profile-preview');
+    if (sdProfileImgInput && profilePreview) {
+        sdProfileImgInput.addEventListener('input', () => {
+            if (sdProfileImgInput.value) profilePreview.src = sdProfileImgInput.value;
+        });
+    }
+
+    /* --- Work Cards Renderer --- */
+    function renderWorkCards() {
+        const container = document.getElementById('work-cards-editor');
+        if (!container) return;
+        container.innerHTML = '';
+        siteData.works.forEach((w, i) => {
+            const card = document.createElement('div');
+            card.className = 'work-editor-card';
+            card.innerHTML = `
+                <div class="work-editor-card-header">
+                    <span class="work-editor-card-title"><i class="fas fa-briefcase" style="color:var(--accent-purple)"></i> Work Entry ${i + 1}</span>
+                    <button type="button" class="btn-danger" onclick="removeWorkCard(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="work-fields-row">
+                    <div class="form-group" style="margin:0;">
+                        <label>Title</label>
+                        <input type="text" class="form-control wc-title" data-idx="${i}" value="${escapeHtml(w.title)}" placeholder="YouTube Channel">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Duration</label>
+                        <input type="text" class="form-control wc-duration" data-idx="${i}" value="${escapeHtml(w.duration)}" placeholder="5 Months">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:0.75rem;">
+                    <label>Description</label>
+                    <input type="text" class="form-control wc-desc" data-idx="${i}" value="${escapeHtml(w.desc)}" placeholder="What did you do?">
+                </div>
+                <div class="work-fields-row" style="margin-top:0;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Icon Class (Font Awesome)</label>
+                        <input type="text" class="form-control wc-icon" data-idx="${i}" value="${escapeHtml(w.icon)}" placeholder="fab fa-youtube">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Icon Color</label>
+                        <div class="color-row">
+                            <input type="color" class="wc-icon-color-picker" data-idx="${i}" value="${w.iconColor || '#8b5cf6'}">
+                            <input type="text" class="form-control wc-icon-color" data-idx="${i}" value="${escapeHtml(w.iconColor)}" placeholder="#ef4444">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Sync color picker <-> text input
+        container.querySelectorAll('.wc-icon-color-picker').forEach(picker => {
+            picker.addEventListener('input', () => {
+                const idx = +picker.dataset.idx;
+                const textInput = container.querySelector(`.wc-icon-color[data-idx="${idx}"]`);
+                if (textInput) textInput.value = picker.value;
+            });
+        });
+        container.querySelectorAll('.wc-icon-color').forEach(txt => {
+            txt.addEventListener('input', () => {
+                const idx = +txt.dataset.idx;
+                const picker = container.querySelector(`.wc-icon-color-picker[data-idx="${idx}"]`);
+                if (picker && /^#[0-9a-f]{6}$/i.test(txt.value)) picker.value = txt.value;
+            });
+        });
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    window.removeWorkCard = (idx) => {
+        siteData.works.splice(idx, 1);
+        renderWorkCards();
+    };
+
+    const addWorkBtn = document.getElementById('add-work-btn');
+    if (addWorkBtn) {
+        addWorkBtn.addEventListener('click', () => {
+            siteData.works.push({ icon: 'fas fa-star', iconBg: 'rgba(139,92,246,0.1)', iconColor: '#8b5cf6', title: 'New Work', duration: '', desc: '' });
+            renderWorkCards();
+            // Scroll to new card
+            const cards = document.querySelectorAll('.work-editor-card');
+            if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+    /* --- Collect form values --- */
+    function collectSettingsFromForm() {
+        const g = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+        // Collect work cards from DOM
+        const container = document.getElementById('work-cards-editor');
+        const works = siteData.works.map((w, i) => {
+            const title = container.querySelector(`.wc-title[data-idx="${i}"]`);
+            const duration = container.querySelector(`.wc-duration[data-idx="${i}"]`);
+            const desc = container.querySelector(`.wc-desc[data-idx="${i}"]`);
+            const icon = container.querySelector(`.wc-icon[data-idx="${i}"]`);
+            const iconColor = container.querySelector(`.wc-icon-color[data-idx="${i}"]`);
+            return {
+                icon: icon ? icon.value.trim() : w.icon,
+                iconBg: `rgba(${hexToRgb(iconColor ? iconColor.value : w.iconColor)},0.1)`,
+                iconColor: iconColor ? iconColor.value.trim() : w.iconColor,
+                title: title ? title.value.trim() : w.title,
+                duration: duration ? duration.value.trim() : w.duration,
+                desc: desc ? desc.value.trim() : w.desc
+            };
+        });
+
+        return {
+            profileImg: g('sd-profile-img'),
+            location: g('sd-location'),
+            experience: g('sd-experience'),
+            education: g('sd-education'),
+            age: g('sd-age'),
+            aboutText: g('sd-about-text'),
+            email: g('sd-email'),
+            instagram: g('sd-instagram'),
+            instagramUrl: g('sd-instagram-url'),
+            works
+        };
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1],16)},${parseInt(result[2],16)},${parseInt(result[3],16)}` : '139,92,246';
+    }
+
+    /* --- Save settings --- */
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const saveStatusMsg = document.getElementById('save-status-msg');
+
+    function setStatus(msg, type) {
+        if (!saveStatusMsg) return;
+        saveStatusMsg.textContent = msg;
+        saveStatusMsg.className = 'save-status ' + (type || '');
+        if (type === 'ok') setTimeout(() => { saveStatusMsg.textContent = ''; saveStatusMsg.className = 'save-status'; }, 4000);
+    }
+
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            saveSettingsBtn.disabled = true;
+            saveSettingsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            setStatus('Saving...', '');
+
+            const newSiteData = collectSettingsFromForm();
+            siteData = newSiteData;
+            localStorage.setItem('port_sitedata', JSON.stringify(siteData));
+
+            try {
+                // Preserve existing videos on PUT
+                let currentVideos = videos;
+                await fetch(CLOUD_JSON_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ videos: currentVideos, siteData: siteData })
+                });
+                setStatus('✓ Saved & synced to live site!', 'ok');
+            } catch(e) {
+                setStatus('Cloud sync failed — saved locally only.', 'err');
+            } finally {
+                saveSettingsBtn.disabled = false;
+                saveSettingsBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save & Sync to Live Site';
+            }
+        });
+    }
+
+    populateSettingsForm();
 });
