@@ -74,7 +74,7 @@ body {
     background: #3f3f46;
 }
 
-/* Ambient Background Orbs */
+/* Ambient Background Orbs - Static, no animation = zero GPU cost */
 .ambient-bg {
     position: fixed;
     top: 0;
@@ -84,31 +84,17 @@ body {
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    background: linear-gradient(135deg, var(--bg-base), #0a0a0f, #07070a);
-    background-size: 200% 200%;
-    animation: driftBackground 20s ease infinite;
+    background: #09090b;
+    will-change: auto;
 }
 
-@keyframes driftBackground {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
+/* Orbs - Static gradient blobs, no animation, no repaints */
 .orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.4;
-    animation: drift 20s infinite ease-in-out alternate;
+    opacity: 0.25;
+    will-change: auto;
+    pointer-events: none;
 }
 
 .orb-1 {
@@ -116,7 +102,7 @@ body {
     left: -10%;
     width: 600px;
     height: 600px;
-    background: var(--accent-purple);
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
 }
 
 .orb-2 {
@@ -124,8 +110,7 @@ body {
     right: -10%;
     width: 500px;
     height: 500px;
-    background: var(--accent-indigo);
-    animation-delay: -5s;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, transparent 70%);
 }
 
 .orb-3 {
@@ -133,19 +118,8 @@ body {
     left: 50%;
     width: 400px;
     height: 400px;
-    background: var(--accent-pink);
-    opacity: 0.2;
-    animation-delay: -10s;
-}
-
-@keyframes drift {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    100% {
-        transform: translate(50px, 50px) scale(1.1);
-    }
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+    opacity: 0.15;
 }
 
 /* Utilities */
@@ -245,11 +219,10 @@ body {
     display: flex;
     gap: 2rem;
     list-style: none;
-    background: var(--bg-glass);
+    background: rgba(18, 18, 22, 0.85);
     padding: 0.5rem 1.5rem;
     border-radius: var(--rounded-full);
     border: 1px solid var(--border-light);
-    backdrop-filter: blur(10px);
 }
 
 .nav-links a {
@@ -363,12 +336,11 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--bg-glass);
+    background: rgba(18, 18, 22, 0.9);
     border: 1px solid var(--border-light);
     padding: 10px 20px;
     border-radius: var(--rounded-full);
     font-size: 0.9rem;
-    backdrop-filter: blur(10px);
     color: var(--text-secondary);
 }
 
@@ -402,7 +374,7 @@ body {
 }
 
 .btn-secondary {
-    background: var(--bg-glass);
+    background: rgba(18, 18, 22, 0.9);
     border: 1px solid var(--border-light);
     color: white;
     padding: 1rem 2.5rem;
@@ -410,7 +382,6 @@ body {
     text-decoration: none;
     font-weight: 600;
     font-size: 1.1rem;
-    backdrop-filter: blur(10px);
     transition: var(--transition-smooth);
 }
 
@@ -424,12 +395,11 @@ body {
    GLASS CARDS & GRIDS
 -------------------------------------- */
 .glass-card {
-    background: var(--bg-glass);
+    background: rgba(18, 18, 22, 0.92);
     border: 1px solid var(--border-light);
     border-radius: var(--rounded-xl);
     padding: 2rem;
-    backdrop-filter: blur(12px);
-    transition: var(--transition-smooth);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
@@ -651,16 +621,16 @@ body {
     overflow: hidden;
     background: #000;
     border: 1px solid var(--border-light);
-    transition: var(--transition-smooth);
     cursor: pointer;
     transform: translateZ(0);
     will-change: transform;
     backface-visibility: hidden;
+    isolation: isolate;
 }
 
 .video-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: translateZ(0) translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
     border-color: var(--border-highlight);
 }
 
@@ -671,16 +641,14 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, 0.7);
     z-index: 10;
     display: none;
     opacity: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
-    transition: opacity 0.3s ease;
-    border-radius: var(--rounded-2xl);
+    transition: opacity 0.2s ease;
     pointer-events: none;
 }
 
@@ -809,15 +777,14 @@ body {
     transform: translate(-50%, -50%);
     width: 64px;
     height: 64px;
-    background: rgba(139, 92, 246, 0.9);
+    background: rgba(139, 92, 246, 0.85);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-size: 1.5rem;
-    backdrop-filter: blur(4px);
-    transition: var(--transition-smooth);
+    transition: opacity 0.2s ease, transform 0.2s ease;
     opacity: 1;
     z-index: 5;
     pointer-events: none;
@@ -886,6 +853,18 @@ body {
 
 .contact-info small {
     color: var(--text-secondary);
+}
+
+/* Scroll reveal — GPU composited only (opacity + transform) */
+.reveal-hidden {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-hidden.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .copyright {

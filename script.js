@@ -285,28 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach on first load (for any statically rendered cards)
     attachPopupEvents();
 
-    /* --- Reveal Elements on Scroll --- */
-    const revealElements = document.querySelectorAll('.glass-card, .video-card');
-
-    revealElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(40px)';
-        el.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-    });
-
-    const revealOnScroll = () => {
-        const windowHeight = window.innerHeight;
-        const revealPoint = 50;
-
-        revealElements.forEach(el => {
-            const elTop = el.getBoundingClientRect().top;
-            if (elTop < windowHeight - revealPoint) {
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
+    /* --- Reveal Elements on Scroll (IntersectionObserver - zero layout thrash) --- */
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                revealObserver.unobserve(entry.target);
             }
         });
-    };
+    }, { threshold: 0.08 });
 
-    window.addEventListener('scroll', revealOnScroll);
-    revealOnScroll(); // Trigger on load
+    document.querySelectorAll('.glass-card, .video-card').forEach(el => {
+        el.classList.add('reveal-hidden');
+        revealObserver.observe(el);
+    });
 });
