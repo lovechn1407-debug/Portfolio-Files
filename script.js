@@ -74,13 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 } else {
                     shortsGrid.innerHTML += `
-                        <div class="video-card aspect-916" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=false; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.muted=true; }">
+                        <div class="video-card aspect-916" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=true; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.currentTime=0; }">
                             <div class="video-loader">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <div class="loader-progress-bar"><div class="loader-progress-fill"></div></div>
                             </div>
                             <div class="play-icon-center"><i class="fas fa-play"></i></div>
-                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="metadata"></video>
+                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="none"></video>
                             <div class="video-overlay">
                                 <h4 class="video-title">${vid.title}</h4>
                                 <p class="video-desc">${vid.desc || ''}</p>
@@ -99,13 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 } else {
                     longformGrid.innerHTML += `
-                        <div class="video-card aspect-169" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=false; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.muted=true; }">
+                        <div class="video-card aspect-169" onmouseenter="let v=this.querySelector('video'); if(v){ v.muted=true; v.play().catch(()=>{}); }" onmouseleave="let v=this.querySelector('video'); if(v){ v.pause(); v.currentTime=0; }">
                             <div class="video-loader">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <div class="loader-progress-bar"><div class="loader-progress-fill"></div></div>
                             </div>
                             <div class="play-icon-center"><i class="fas fa-play"></i></div>
-                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="metadata"></video>
+                            <video src="${vid.link}" loop muted playsinline poster="${vid.thumb || ''}" preload="none"></video>
                             <div class="video-overlay">
                                 <h4 class="video-title">${vid.title}</h4>
                                 <p class="video-desc">${vid.desc || ''}</p>
@@ -261,14 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 vNode.pause();
                 popupOverlay.classList.add('active');
-                popupVideo.play();
+                popupVideo.muted = false;
+                popupVideo.play().catch(() => {});
             });
         });
 
         const closePopup = () => {
             popupOverlay.classList.remove('active');
             popupVideo.pause();
-            popupVideo.src = '';
+            popupVideo.removeAttribute('src');
+            popupVideo.load();
         };
 
         closePopupBtn.onclick = closePopup;

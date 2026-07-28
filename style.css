@@ -653,6 +653,9 @@ body {
     border: 1px solid var(--border-light);
     transition: var(--transition-smooth);
     cursor: pointer;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 .video-card:hover {
@@ -722,6 +725,9 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 /* External Link Card (For Google Drive) */
