@@ -93,6 +93,23 @@ app.post('/upload', upload.single('video'), async (req, res) => {
     }
 });
 
+// CORS Proxy endpoint for local testing
+app.get('/api/cors-proxy', async (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) return res.status(400).json({ error: 'Missing target url parameter.' });
+    try {
+        const response = await fetch(targetUrl);
+        if (!response.ok) return res.status(response.status).send('Failed to fetch remote asset');
+        const contentType = response.headers.get('content-type') || 'video/mp4';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        const buffer = await response.arrayBuffer();
+        res.send(Buffer.from(buffer));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Start the server
 app.listen(port, () => {
     console.log(`Telegram Video Backend running on http://localhost:${port}`);

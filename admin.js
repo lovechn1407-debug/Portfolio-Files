@@ -466,10 +466,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             drawSuccess = false;
         }
 
-        // Fallback: If direct draw failed due to CORS, attempt blob fetch fallback
+        // Fallback: If direct draw failed due to CORS on external URL, fetch via serverless CORS proxy
         if (!drawSuccess && videoElement.src && !videoElement.src.startsWith('blob:')) {
             try {
-                const resp = await fetch(videoElement.src);
+                if (statusElement) {
+                    statusElement.textContent = '⏳ Processing external video via CORS proxy...';
+                    statusElement.style.color = 'var(--accent-purple)';
+                }
+                const proxyUrl = `/api/cors-proxy?url=${encodeURIComponent(videoElement.src)}`;
+                const resp = await fetch(proxyUrl);
                 if (resp.ok) {
                     const blob = await resp.blob();
                     const blobUrl = URL.createObjectURL(blob);
@@ -477,12 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tempVid.muted = true;
                     tempVid.src = blobUrl;
                     await new Promise(r => { tempVid.onloadeddata = r; tempVid.currentTime = videoElement.currentTime; });
-                    await new Promise(r => { tempVid.onseeked = r; });
+                    await new Promise(r => { tempVid.onseeked = r; setTimeout(r, 200); });
                     ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
                     URL.revokeObjectURL(blobUrl);
                     drawSuccess = true;
                 }
             } catch (err) {
+                console.warn('CORS Proxy fallback failed:', err);
                 drawSuccess = false;
             }
         }
