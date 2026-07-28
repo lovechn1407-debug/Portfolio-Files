@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Chauhan | Portfolio Admin</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header {
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+            background: rgba(9, 9, 11, 0.9);
+            backdrop-filter: blur(12px);
+        }
+
+        .admin-container {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media(min-width: 800px) {
+            .admin-container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-light);
+            color: white;
+            padding: 12px 16px;
+            border-radius: var(--rounded-xl);
+            font-family: var(--font-body);
+            transition: var(--transition-fast);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .video-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .admin-video-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+            border-radius: var(--rounded-xl);
+            border: 1px solid var(--border-light);
+        }
+
+        .admin-video-info h4 {
+            margin-bottom: 0.2rem;
+            color: white;
+        }
+
+        .admin-video-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Drag and Drop Styles */
+        .admin-video-card.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--accent-purple);
+        }
+
+        .admin-video-card.drag-over {
+            border-top: 2px solid var(--accent-pink);
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: var(--text-secondary);
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <header class="admin-header">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-lock"></i></div>
+            Admin Dashboard
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="index.html" class="btn-secondary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">View Site</a>
+            <button id="logout-btn" class="btn-secondary" style="padding: 0.5rem 1.2rem; font-size: 0.9rem; border-color: rgba(239, 68, 68, 0.4); color: #ef4444; cursor: pointer;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <!-- Add Video Form -->
+        <div class="glass-card">
+            <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-video" style="color:var(--accent-purple);"></i> Add Portfolio Video</h3>
+            
+            <!-- Video Source Selection Tabs -->
+            <div class="source-toggle-group">
+                <button type="button" class="source-tab-btn active" id="tab-source-file">
+                    <i class="fas fa-file-upload"></i> Upload File
+                </button>
+                <button type="button" class="source-tab-btn" id="tab-source-link">
+                    <i class="fas fa-link"></i> Direct Video / Link
+                </button>
+            </div>
+
+            <form id="add-video-form">
+                <div class="form-group">
+                    <label>Video Title</label>
+                    <input type="text" id="v-title" class="form-control" placeholder="E.g. Transition Edit" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Short Description (Optional)</label>
+                    <input type="text" id="v-desc" class="form-control" placeholder="E.g. Used Alight Motion">
+                </div>
+
+                <div class="form-group">
+                    <label>Format</label>
+                    <select id="v-format" class="form-control" required>
+                        <option value="shorts">9:16 (Reels/Shorts)</option>
+                        <option value="longform">16:9 (YouTube/Landscape)</option>
+                    </select>
+                </div>
+
+                <!-- Input Group 1: File Upload -->
+                <div class="form-group" id="file-upload-group">
+                    <label>Upload Video File (.mp4)</label>
+                    <input type="file" id="v-file" class="form-control" accept="video/mp4,video/x-m4v,video/*" required>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                        File will be uploaded via Telegram server to generate a direct stream link.
+                    </p>
+                </div>
+
+                <!-- Input Group 2: Direct Video / External Link -->
+                <div class="form-group" id="direct-link-group" style="display: none;">
+                    <label>Direct Video / External Link URL</label>
+                    <input type="url" id="v-direct-link" class="form-control"
+                        placeholder="https://example.com/video.mp4 or Drive / YouTube link">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
+                        Enter a direct video URL (.mp4), CDN link, or Google Drive / YouTube link.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label>Cover Image Thumbnail Link (Optional)</label>
+                    <input type="url" id="v-thumb" class="form-control" placeholder="https://...">
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="form-group" id="progress-container" style="display: none; margin-top: 1rem;">
+                    <label style="display:flex; justify-content:space-between; color: var(--accent-purple);">
+                        <span>Uploading...</span>
+                        <span id="progress-text">0%</span>
+                    </label>
+                    <div
+                        style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
+                        <div id="progress-bar"
+                            style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.2s;">
+                        </div>
+                    </div>
+                    <p id="progress-status"
+                        style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; text-align: center;">
+                        Sending to proxy server...</p>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn-primary"
+                    style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    Add to Portfolio <i class="fas fa-plus-circle"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Manage existing videos -->
+        <div class="glass-card">
+            <h3 style="margin-bottom: 1.5rem; color: white;"><i class="fas fa-list"></i> Managed Videos (<span
+                    id="video-count">0</span>)</h3>
+            <div class="video-list" id="admin-video-list">
+                <!-- Videos map here -->
+            </div>
+            <button id="clear-all-btn" class="btn-secondary"
+                style="margin-top: 2rem; width: 100%; border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">Clear All
+                Data</button>
+        </div>
+    </div>
+
+    <!-- Admin Login Protection Modal Overlay -->
+    <div class="admin-login-overlay" id="admin-login-modal">
+        <div class="admin-login-card">
+            <div class="login-header">
+                <div class="login-icon-badge"><i class="fas fa-lock"></i></div>
+                <h3>Admin Login Required</h3>
+                <p>Please log in to access the Admin Panel</p>
+            </div>
+            <form id="admin-login-form">
+                <div class="login-error-alert" id="login-error">
+                    <i class="fas fa-exclamation-circle"></i> <span id="login-error-msg">Invalid Admin ID or Password</span>
+                </div>
+                <div class="form-group">
+                    <label>Admin ID</label>
+                    <div class="input-icon-wrapper">
+                        <input type="text" id="login-id" class="form-control" placeholder="Enter Admin ID" required autocomplete="username">
+                        <i class="fas fa-user left-icon"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Admin Password</label>
+                    <div class="input-icon-wrapper">
+                        <input type="password" id="login-pass" class="form-control" placeholder="Enter Password" required autocomplete="current-password">
+                        <i class="fas fa-key left-icon"></i>
+                        <button type="button" class="toggle-pass-btn" id="toggle-pass-visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1.5rem;">
+                    Sign In to Dashboard <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>
